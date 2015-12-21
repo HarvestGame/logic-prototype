@@ -17,7 +17,7 @@ cabal-version:       >=1.10
 
 library
   exposed-modules:     Logic
-  -- other-modules:       
+  other-modules:       Logic.Types
   -- other-extensions:    
   build-depends:       base >=4.8 && <4.9,
                        lens,

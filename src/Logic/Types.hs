@@ -11,18 +11,18 @@ import Control.Monad.State.Class
 -- | Id is something that tags an instance of something
 type Id = Int
 
-newtype PlayerId = PlayerId Id
-newtype UnitId = UnitId Id
+newtype PlayerId = PlayerId Id deriving (Show, Eq, Ord)
+newtype UnitId = UnitId Id deriving (Show, Eq, Ord)
 
 -- | Kind tags a static type of something
 type Kind = Int
 newtype BuildingKind = BuildingKind Kind
 
-data UnitState = Idle | Moving | Harvesting | Fighting
+data UnitState = Idle | Moving | Harvesting | Fighting deriving (Show)
 
 data Unit = Unit {
     _UnitState :: UnitState
-    }
+    } deriving (Show)
 
 data Building = Building {
     _buildingHp :: Int,
@@ -32,14 +32,14 @@ data Building = Building {
 data PlayerState = PlayerState {
     _gold :: Int,
     _wood :: Int
-    }
+    } deriving (Show)
 
 -- | This is a complete snapshot of a game.
 data GameState = GameState {
     _units :: Map.Map UnitId Unit,
     _tick :: Int, -- | this is the tick number of the current game
     _players :: Map.Map PlayerId PlayerState
-    }
+    } deriving (Show)
 
 -- | Universal type for stateful contexts.
 type GameM a = forall m. MonadState GameState m => m a

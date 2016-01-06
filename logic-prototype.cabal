@@ -2,7 +2,7 @@
 -- documentation, see http://haskell.org/cabal/users-guide/
 
 name:                logic-prototype
-version:             0.1.0.0
+version:             0.1.1.0
 -- synopsis:
 -- description:
 license:             MIT
@@ -18,8 +18,8 @@ cabal-version:       >=1.10
 library
   exposed-modules:     Logic
                        Logic.Types
-  -- other-modules:       Logic.Types
-  -- other-extensions:
+  other-modules:       Logic.Validation
+
   build-depends:       base >=4.8 && <4.9,
                        lens,
                        containers,

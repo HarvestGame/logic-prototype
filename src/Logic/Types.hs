@@ -40,6 +40,7 @@ data GameState = GameState {
     _tick :: Int, -- | this is the tick number of the current game
     _players :: Map.Map PlayerId PlayerState
     } deriving (Show)
+makeLenses ''GameState
 
 -- | Universal type for stateful contexts.
 type GameM a = forall m. MonadState GameState m => m a
@@ -53,11 +54,13 @@ data GridPosition = GridPosition Int Int
 -- | Represents a possible target for a command
 data Target = PositionTarget Position | UnitTarget UnitId
 
--- | One atomic input coming from a player.
+-- | One atomic input coming from a player. Note that one
+-- command can be given to multiple units, except of BuildCommand.
 data Command =
-    MoveCommand UnitId Target |
-    AttackCommand UnitId Target |
-    BuildCommand UnitId BuildingKind GridPosition
+    MoveCommand [UnitId] Target |
+    AttackCommand [UnitId] Target |
+    BuildCommand UnitId BuildingKind GridPosition |
+    GatherCommand [UnitId] Target
 
 -- | Represents input coming from a player.
 -- A player can submit more than one command for each tick.

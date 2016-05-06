@@ -5,12 +5,13 @@ import Logic.Data.Units
 import Control.Lens
 import Control.Monad.State
 import Data.Maybe (fromJust)
-import qualified Data.Map as Map (lookup) 
+import qualified Data.Map as Map (lookup, fromList)
 
 tickTime = 1.0/60.0 :: Float
 
 simulationStep :: PlayerCommandSet -> GameState -> GameState
 simulationStep cmds g = flip execState g $ do
+    tick += 1
     -- first we want to advance all units that are already in motion
     units . traversed . movementCooldown %= cooldown
     units . traversed . filtered isMoving  . attackCooldown %= cooldown
@@ -30,6 +31,7 @@ isMoving u = case u ^. unitState of
 
 -- | The sub-tick values can only be used in the next following tick
 cooldown a
+    | a == 0 = 0
     | a < 0 = 0
     | otherwise = a - tickTime
 
@@ -57,6 +59,8 @@ move = execState $ do
     let speed = unitData ^. movementSpeed
     dir <- use direction
 
-    if mcd < (speed/2)
-         then position %= applyMovement dir
+    if mcd <= 0
+         then do
+            position %= applyMovement dir
+            movementCooldown .= speed
          else return ()

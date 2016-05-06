@@ -47,7 +47,7 @@ toMovement DirNW = Position (-1) (-1)
 toMovement DirW = Position (-1) 0
 toMovement DirE = Position 1 0
 toMovement DirS = Position 0 1
-toMovement DirSE = Position 1 (-1)
+toMovement DirSE = Position 1 1
 toMovement DirSW = Position (-1) 1
 
 move :: Unit -> Unit
@@ -57,10 +57,40 @@ move = execState $ do
 
     let unitData = fromJust $ Map.lookup tp unitsBase
     let speed = unitData ^. movementSpeed
-    dir <- use direction
 
     if mcd <= 0
          then do
-            position %= applyMovement dir
+            (position %=) . applyMovement =<< use direction
             movementCooldown .= speed
+            (direction .=) =<< calculateDirection
+
          else return ()
+
+-- | This function should probably be replaced by actual pathfinding
+calculateDirection :: State Unit Direction
+calculateDirection = do
+    (Position x y) <- use position
+    (Position tx ty) <- findTargetPosition
+
+    let dx = tx - x
+    let dy = ty - y
+
+    return $
+        if dx == 0 then
+            if dy == 0 then DirN -- on target, essentially impossible
+                else if dy > 0 then DirS
+                               else DirN
+        else if dx > 0 then
+            if dy == 0 then DirE
+                else if dy > 0 then DirSE
+                               else DirNE
+        else if dy == 0 then DirW
+                else if dy > 0 then DirSW
+                               else DirNW
+
+findTargetPosition :: State Unit Position
+findTargetPosition = do
+    (Moving t) <- use unitState
+    case t of
+        (PositionTarget p) -> return p
+        (UnitTarget uid) -> error "not implemented yet, also change signature"

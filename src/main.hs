@@ -9,7 +9,7 @@ import Control.Concurrent
 
 exampleGameState = addUnit 1 (Position 1 1) $ initialGameState
 
-main = flip execStateT exampleGameState $ replicateM_ 100 $ do
+main = flip execStateT exampleGameState $ replicateM_ 500 $ do
     modify $ simulationStep []
     get >>= liftIO . print
     --liftIO $ threadDelay 1000

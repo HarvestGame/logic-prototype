@@ -1,6 +1,7 @@
 {-# LANGUAGE TemplateHaskell #-}
 {-# LANGUAGE RankNTypes #-}
 {-# LANGUAGE FlexibleContexts #-}
+{-# LANGUAGE GeneralizedNewtypeDeriving #-}
 
 module Logic.Types where
 
@@ -11,23 +12,47 @@ import Control.Monad.State.Class
 -- | Id is something that tags an instance of something
 type Id = Int
 
-newtype PlayerId = PlayerId Id deriving (Show, Eq, Ord)
-newtype UnitId = UnitId Id deriving (Show, Eq, Ord)
+newtype PlayerId = PlayerId Id deriving (Show, Eq, Ord, Num)
+newtype UnitId = UnitId Id deriving (Show, Eq, Ord, Num)
+newtype UnitType = UnitType Id deriving (Show, Eq, Ord, Num)
 
 -- | Kind tags a static type of something
 type Kind = Int
 newtype BuildingKind = BuildingKind Kind
 
-data UnitState = Idle | Moving | Harvesting | Fighting deriving (Show)
+data UnitData = UnitData {
+    _maxHp :: Int,
+    _attackValue :: Int,
+    _attackSpeed :: Float,
+    _movementSpeed :: Float
+}
+makeLenses ''UnitData
+
+-- | Represents continuous position on the game map.
+data Position = Position Int Int deriving (Show, Eq)
+
+-- | Represents a direction on the grid
+data Direction = 
+    DirNW | DirN | DirNE |
+    DirW  |        DirE  |
+    DirSW | DirS | DirSE
+    deriving (Show, Eq)
+
+-- | Represents a possible target for a command
+data Target = PositionTarget Position | UnitTarget UnitId deriving (Show, Eq)
+
+data UnitState = Idle | Moving Target | Harvesting Target | Attacking Target deriving (Show)
 
 data Unit = Unit {
-    _UnitState :: UnitState
-    } deriving (Show)
+    _UnitState :: UnitState,
+    _attackCooldown :: Float,
+    _movementCooldown :: Float,
+    _UnitType :: UnitType,
 
-data Building = Building {
-    _buildingHp :: Int,
-    _buildingMaxHp :: Int
-    }
+    _position :: Position,
+    _direction :: Direction
+    } deriving (Show)
+makeLenses ''Unit
 
 data PlayerState = PlayerState {
     _gold :: Int,
@@ -37,6 +62,7 @@ data PlayerState = PlayerState {
 -- | This is a complete snapshot of a game.
 data GameState = GameState {
     _units :: Map.Map UnitId Unit,
+    _lastUnitId :: UnitId,
     _tick :: Int, -- | this is the tick number of the current game
     _players :: Map.Map PlayerId PlayerState
     } deriving (Show)
@@ -45,14 +71,8 @@ makeLenses ''GameState
 -- | Universal type for stateful contexts.
 type GameM a = forall m. MonadState GameState m => m a
 
--- | Represents continuous position on the game map.
-data Position = Position Int Int
-
 -- | Represents a position used on the grid by building units.
 data GridPosition = GridPosition Int Int
-
--- | Represents a possible target for a command
-data Target = PositionTarget Position | UnitTarget UnitId
 
 -- | One atomic input coming from a player. Note that one
 -- command can be given to multiple units, except of BuildCommand.
